@@ -1,8 +1,8 @@
 {-# LANGUAGE CApiFFI #-}
-module Basement.Terminal.Size 
+module Basement.Terminal.Size
     ( getDimensions
     ) where
-        
+
 import           Foreign
 import           Foreign.C
 import           Basement.Compat.Base
@@ -23,13 +23,20 @@ import           Graphics.Win32.Misc (getStdHandle, sTD_OUTPUT_HANDLE, StdHandle
 #ifdef __sun
 #include <sys/termios.h>
 #endif
-#endif 
+#endif
 
 #include <stdio.h>
 
 #if __GLASGOW_HASKELL__ < 800
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 #endif
+
+#if defined(wasm32_HOST_ARCH)
+
+getDimensions :: IO (CountOf Char, CountOf Char)
+getDimensions = error "Basement.Terminal.Size.getDimensions"
+
+#else
 
 #ifdef FOUNDATION_SYSTEM_UNIX
 data Winsize = Winsize
@@ -53,11 +60,11 @@ instance Storable Winsize where
         #{poke struct winsize, ws_col} ptr c
         #{poke struct winsize, ws_xpixel} ptr x
         #{poke struct winsize, ws_ypixel} ptr y
-        
+
 #elif defined FOUNDATION_SYSTEM_WINDOWS
 type Handle = Ptr CChar  -- void *
 
-data SmallRect = SmallRect 
+data SmallRect = SmallRect
     { left   :: !Int16
     , top    :: !Int16
     , right  :: !Int16
@@ -78,8 +85,8 @@ instance Storable SmallRect where
         #{poke SMALL_RECT, Top} ptr t
         #{poke SMALL_RECT, Right} ptr r
         #{poke SMALL_RECT, Bottom} ptr b
-        
-data Coord = Coord 
+
+data Coord = Coord
     { x :: !Int16
     , y :: !Int16
     } deriving (Show)
@@ -95,7 +102,7 @@ instance Storable Coord where
         #{poke COORD, X} ptr x
         #{poke COORD, Y} ptr y
 
-data ConsoleScreenBufferInfo = ConsoleScreenBufferInfo 
+data ConsoleScreenBufferInfo = ConsoleScreenBufferInfo
     { dwSize              :: !Coord
     , dwCursorPosition    :: !Coord
     , wAttributes         :: !Word16
@@ -119,7 +126,7 @@ instance Storable ConsoleScreenBufferInfo where
         #{poke CONSOLE_SCREEN_BUFFER_INFO, wAttributes} ptr a
         #{poke CONSOLE_SCREEN_BUFFER_INFO, srWindow} ptr w
         #{poke CONSOLE_SCREEN_BUFFER_INFO, dwMaximumWindowSize} ptr m
-    
+
 invalidHandleValue :: IntPtr
 invalidHandleValue = #{const INVALID_HANDLE_VALUE}
 
@@ -137,7 +144,7 @@ tiocgwinsz :: CULong
 tiocgwinsz = Prelude.fromIntegral (#{const TIOCGWINSZ} :: Word)
 
 #elif defined FOUNDATION_SYSTEM_WINDOWS
-foreign import ccall "GetConsoleScreenBufferInfo" c_get_console_screen_buffer_info 
+foreign import ccall "GetConsoleScreenBufferInfo" c_get_console_screen_buffer_info
   :: HANDLE -> Ptr ConsoleScreenBufferInfo -> IO BOOL
 #endif
 
@@ -152,7 +159,7 @@ ioctlWinsize fd = alloca $ \winsizePtr -> do
     toDimensions winsize =
         ( CountOf . Prelude.fromIntegral . ws_col $ winsize
         , CountOf . Prelude.fromIntegral . ws_row $ winsize)
-       
+
 #elif defined FOUNDATION_SYSTEM_WINDOWS
 getConsoleScreenBufferInfo :: HANDLE -> IO (Maybe ConsoleScreenBufferInfo)
 getConsoleScreenBufferInfo handle = alloca $ \infoPtr -> do
@@ -160,7 +167,7 @@ getConsoleScreenBufferInfo handle = alloca $ \infoPtr -> do
     if status
         then Just <$> peek infoPtr
         else pure Nothing
-       
+
 winWinsize :: StdHandleId -> IO (Maybe (CountOf Char, CountOf Char))
 winWinsize handleRef = (infoToDimensions <$>) <$>
     (getStdHandle handleRef >>= getConsoleScreenBufferInfo)
@@ -188,3 +195,5 @@ getDimensions =
 #endif
   where
     defaultSize = (80, 24)
+
+#endif

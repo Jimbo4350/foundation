@@ -53,10 +53,6 @@ import           Basement.Monad
 import           Basement.Nat
 import qualified Prelude (quot)
 
-#if WORD_SIZE_IN_BITS < 64
-import           GHC.IntWord64
-#endif
-
 #ifdef FOUNDATION_BOUNDS_CHECK
 
 divBytes :: PrimType ty => Offset ty -> (Int -> Int)

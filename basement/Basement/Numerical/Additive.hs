@@ -29,10 +29,6 @@ import           Basement.Types.Word256 (Word256)
 import qualified Basement.Types.Word128 as Word128
 import qualified Basement.Types.Word256 as Word256
 
-#if WORD_SIZE_IN_BITS < 64
-import           GHC.IntWord64
-#endif
-
 -- | Represent class of things that can be added together,
 -- contains a neutral element and is commutative.
 --
@@ -80,15 +76,9 @@ instance Additive Int32 where
 instance Additive Int64 where
     azero = 0
 #if WORD_SIZE_IN_BITS == 64
-#if __GLASGOW_HASKELL__ >= 904
     (I64# a) + (I64# b) = I64# (GHC.Prim.intToInt64# (GHC.Prim.int64ToInt# a +# GHC.Prim.int64ToInt# b))
-
 #else
-    (I64# a) + (I64# b) = I64# (a +# b)
-
-#endif
-#else
-    (I64# a) + (I64# b) = I64# (a `plusInt64#` b)
+    (I64# a) + (I64# b) = I64# (a `GHC.Prim.plusInt64#` b)
 #endif
     scale = scaleNum
 instance Additive Word where
@@ -114,15 +104,9 @@ instance Additive Word32 where
 instance Additive Word64 where
     azero = 0
 #if WORD_SIZE_IN_BITS == 64
-#if __GLASGOW_HASKELL__ >= 904
     (W64# a) + (W64# b) = W64# (GHC.Prim.wordToWord64# (GHC.Prim.word64ToWord# a `plusWord#` GHC.Prim.word64ToWord# b))
-
 #else
-    (W64# a) + (W64# b) = W64# (a `plusWord#` b)
-
-#endif
-#else
-    (W64# a) + (W64# b) = W64# (int64ToWord64# (word64ToInt64# a `plusInt64#` word64ToInt64# b))
+    (W64# a) + (W64# b) = W64# (GHC.Prim.int64ToWord64# (GHC.Prim.word64ToInt64# a `GHC.Prim.plusInt64#` GHC.Prim.word64ToInt64# b))
 #endif
     scale = scaleNum
 instance Additive Word128 where

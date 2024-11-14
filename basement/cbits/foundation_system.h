@@ -53,6 +53,8 @@
 #elif defined(_POSIX_VERSION)
     #define FOUNDATION_SYSTEM_UNIX
     // POSIX
+#elif defined(wasm32_HOST_ARCH)
+    #define FOUNDATION_SYSTEM_UNIX
 #else
 #   error "foundation: system: Unknown compiler"
 #endif

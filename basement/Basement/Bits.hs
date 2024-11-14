@@ -53,10 +53,6 @@ import GHC.Word
 import GHC.Int
 import Basement.Compat.Primitive
 
-#if WORD_SIZE_IN_BITS < 64
-import GHC.IntWord64
-#endif
-
 -- | operation over finite bits
 class FiniteBitsOps bits where
     -- | get the number of bits in the given object
