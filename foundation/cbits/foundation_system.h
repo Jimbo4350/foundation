@@ -53,6 +53,10 @@
 #elif defined(_POSIX_VERSION)
     #define FOUNDATION_SYSTEM_UNIX
     // POSIX
+#elif defined(__wasi__)
+    #define FOUNDATION_SYSTEM_WASI
+    #define FOUNDATION_SYSTEM_API_NO_CLOCK 
+    // WASI
 #else
 #   error "foundation: system: Unknown compiler"
 #endif

@@ -164,15 +164,19 @@ library
                      Foundation.Partial
                      -- Foundation.Time.Bindings
                      Foundation.System.Entropy.Common
-                     Foundation.System.Bindings.Network
                      Foundation.System.Bindings.Time
                      Foundation.System.Bindings.Hs
+  if !os(wasi)
+    other-modules:   Foundation.System.Bindings.Network
 
   include-dirs:      cbits
   c-sources:         cbits/foundation_random.c
                      cbits/foundation_network.c
                      cbits/foundation_time.c
                      cbits/foundation_utf8.c
+  if os(wasi)
+    cc-options: -D_WASI_EMULATED_MMAN
+    ld-options: -lwasi-emulated-mman
 
   if flag(experimental)
     exposed-modules: Foundation.Network.HostName
